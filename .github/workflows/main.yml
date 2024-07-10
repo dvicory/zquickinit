@@ -67,7 +67,7 @@ jobs:
       - name: Build the builder
         run: ./zquickinit.sh builder --githubaction --load
       - name: Push OCI package to registry
-        run: ./zquickinit.sh builder --githubaction --push --tag ghcr.io/midzelis/zquickinit:latest --tag ghcr.io/midzelis/zquickinit:${{ steps.tag_version.outputs.new_tag }}
+        run: ./zquickinit.sh builder --githubaction --push --tag ghcr.io/dvicory/zquickinit:latest --tag ghcr.io/dvicory/zquickinit:${{ steps.tag_version.outputs.new_tag }}
       - name: Build initramfs
         run: ./zquickinit.sh initramfs --no-ask --release
       - name: Build ISO
