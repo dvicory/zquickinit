@@ -24,8 +24,8 @@ DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 SRC_ROOT=${DIR}
 ZBM_ROOT=${SRC_ROOT}/../zfsbootmenu
 RECIPES_ROOT=${RECIPES_ROOT:-${SRC_ROOT}/recipes}
-RECIPE_BUILDER="ghcr.io/midzelis/zquickinit"
-ZQUICKEFI_URL="https://github.com/midzelis/zquickinit/releases/latest"
+RECIPE_BUILDER="ghcr.io/dvicory/zquickinit"
+ZQUICKEFI_URL="https://github.com/dvicory/zquickinit/releases/latest"
 # if empty, use latest release tag
 ZBM_TAG=
 # if specified, takes precedence over ZBM_TAG
