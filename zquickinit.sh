@@ -189,13 +189,13 @@ make_zquick_initramfs() {
 		local hash
 		echo "Downloading zquickinit"
 		rm -rf /input
-		git clone --quiet --depth 1 https://github.com/midzelis/zquickinit.git /input
+		git clone --quiet --depth 1 https://github.com/dvicory/zquickinit.git /input
 		hash=$(cat /etc/zquickinit-commit-hash || echo '')
 		if [[ -n "${hash}" ]]; then
 			(cd /input && git fetch --depth 1 origin "$hash" && git checkout FETCH_HEAD)
 		fi
 	fi
-	(cd /input && git config --global --add safe.directory /input && git rev-parse HEAD > /etc/zquickinit-commit-hash && echo "ZQuickInit (https://github.com/midzelis/zquickinit) commit hash: $(git rev-parse --short HEAD) ($(git rev-parse HEAD))")
+	(cd /input && git config --global --add safe.directory /input && git rev-parse HEAD > /etc/zquickinit-commit-hash && echo "ZQuickInit (https://github.com/dvicory/zquickinit) commit hash: $(git rev-parse --short HEAD) ($(git rev-parse HEAD))")
 
 	if [[ ! -d /zbm ]]; then
 		echo "Downloading latest zfsbootmenu"
@@ -440,7 +440,7 @@ getefi() {
 		echo "No image found, finding latest release..."
 		local version='' download=''
 		version=$(curl --silent -qI "${ZQUICKEFI_URL}" | awk -F '/' '/^location/ {print  substr($NF, 1, length($NF)-1)}')
-		download="https://github.com/midzelis/zquickinit/releases/download/$version/zquickinit.efi"
+		download="https://github.com/dvicory/zquickinit/releases/download/$version/zquickinit.efi"
 		echo "Downloading from ${download} to ${source}..."
 		curl -o "$source" --progress-bar -L "${download}" 
 	fi
