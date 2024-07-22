@@ -9,7 +9,7 @@
 # repository you want on /zbm inside the container.
 
 # Use the official Void Linux container
-FROM ghcr.io/void-linux/void-glibc-full 
+FROM ghcr.io/void-linux/void-glibc-full:20240228R1
 LABEL org.opencontainers.image.source https://github.com/dvicory/zquickinit
 
 ARG XBPS_REPOS="https://repo-fastly.voidlinux.org/current https://repo-fastly.voidlinux.org/current/nonfree"
