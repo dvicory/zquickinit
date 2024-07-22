@@ -212,7 +212,7 @@ make_zquick_initramfs() {
 	hooks=()
 	hook_dirs=()
 
-	system_hooks=(autodetect base udev modconf block filesystems keyboard strip lvm2)
+	system_hooks=(autodetect base udev modconf block filesystems keyboard strip)
 
 	recipes=()
 	for dir in /input/recipes/*/initcpio; do
