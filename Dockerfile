@@ -21,7 +21,7 @@ ARG XBPS_REPOS="https://repo-fastly.voidlinux.org/current https://repo-fastly.vo
 # Default: install 5.10, 5.15, 6.1 and 6.2
 #
 # (multiple entries must be seperated by spaces)
-ARG KERNELS="linux5.10 linux5.15 linux6.1 linux6.2" 
+ARG KERNELS="linux5.10 linux5.15 linux6.1 linux6.2 linux6.6"
 
 # Run the following within an external cache (/var/cache/xbps) for the 
 # package manager; so when this layer is rebuilt, at least you save 

@@ -160,7 +160,7 @@ builder() {
 	echo
 	cmd=("$ENGINE" build . 
 		-t "$RECIPE_BUILDER" 
-		--build-arg KERNELS=linux6.2
+		--build-arg KERNELS=linux6.6
 		--build-arg "PACKAGES=${packages[*]}" 
 		--build-arg ZBM_COMMIT_HASH="${ZBM_COMMIT_HASH}"
 		--build-arg ZQUICKINIT_COMMIT_HASH="${ZQUICKINIT_COMMIT_HASH}"
@@ -635,6 +635,7 @@ playground() {
 
 	APPEND=("loglevel=6 zbm.show")
 	SSH_PORT=2222
+	WEBADMIN_PORT=8007
 	aoi=''
 	if [[ "$OSTYPE" == "darwin"* ]]; then
 		aoi=''
@@ -647,7 +648,7 @@ playground() {
 		-smp "$(nproc)"
 		-object rng-random,id=rng0,filename=/dev/urandom -device virtio-rng-pci,rng=rng0 
 		-object iothread,id=iothread0
-		-netdev user,id=n1,hostfwd=tcp::"${SSH_PORT}"-:22,hostfwd=tcp::8006-:8006 -device virtio-net-pci,netdev=n1 
+		-netdev user,id=n1,hostfwd=tcp::"${SSH_PORT}"-:22,hostfwd=tcp::${WEBADMIN_PORT}-:8006 -device virtio-net-pci,netdev=n1
 		-device virtio-scsi-pci,id=scsi0,iothread=iothread0
 		-device scsi-hd,drive=drive1,bus=scsi0.0,bootindex=1,rotation_rate=1
 		-device scsi-hd,drive=drive2,bus=scsi0.0,bootindex=2,rotation_rate=1
