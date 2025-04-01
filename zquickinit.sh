@@ -663,8 +663,8 @@ initramfs() {
 	((ENTER == 0 && NOASK == 1)) && cmd+=(--no-ask)
 	((DEBUG == 1)) && cmd+=(--debug)
 	((RELEASE == 1)) && cmd+=(--release)
-	[[ -n "$SECRETS" ]] && cmd+=(--secrets "$SECRETS")
-	[[ -n "$MKINIT_VERBOSE" ]] && cmd+=("$MKINIT_VERBOSE")
+	[[ $ENTER == 0 && -n "$SECRETS" ]] && cmd+=(--secrets "$SECRETS")
+	[[ $ENTER == 0 && -n "$MKINIT_VERBOSE" ]] && cmd+=("$MKINIT_VERBOSE")
 	echo
 	"${cmd[@]}"
 }
@@ -999,6 +999,9 @@ playground() {
 		-object iothread,id=iothread0
 		-netdev user,id=n1,hostfwd=tcp::"${SSH_PORT}"-:22,hostfwd=tcp::8006-:8006 -device virtio-net-pci,netdev=n1
 		-device virtio-scsi-pci,iothread=iothread0)
+		# -netdev user,id=n2 -device virtio-net-pci,netdev=n2
+		# -drive file=/tmp/nvm-1.img,if=none,id=nvm-1,unit=3
+		# -device nvme,serial=deadbeef,drive=nvm-1)
 	# shellcheck disable=SC2054
 	((DRIVE1 == 1)) && args+=(
 		-device scsi-hd,drive=drive1,bootindex=1,rotation_rate=1)
