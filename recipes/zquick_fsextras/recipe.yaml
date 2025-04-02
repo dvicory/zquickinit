@@ -6,4 +6,5 @@ xbps-packages:
  - dosfstools
  - mtools
  - kpartx
+ - nvme-cli
 help: "Includes useful commands for creating and viewing partitions and filesystems. Also `efibootmgr`, `cryptsetup`.  "
