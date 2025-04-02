@@ -8,9 +8,12 @@ build() {
 	add_binary traceroute
 	add_binary netstat
 	add_binary ss
+	add_file ${zquickinit_config}/etc/network/configure /etc/network/configure
 	add_file /etc/resolv.conf
 	# prefer real chown over busybox
 	add_binary chown
+
+	zquick_add_secret /etc/network/configure "network configuration" 644
 
 	zquick_add_fs
 }

@@ -37,20 +37,49 @@ cat >/etc/dhcp/dhclient.conf <<-EOF
 EOF
 
 # Get a list of all network interfaces
-interfaces=$(ip link show | awk -F': ' '{print $2}')
+interfaces=$(ip link show | awk -F': ' '/^[0-9]+:/ && !/^[0-9]+: lo/{print $2}')
 
-# Bring up each interface and get a DHCP IP address
-for interface in $interfaces; do
+# Execute /etc/network/configure if it exists
+if [[ -f /etc/network/configure ]]; then
+	qinitlog "Executing /etc/network/configure"
+	if ! bash /etc/network/configure; then
+		qinitlog "Failed to execute /etc/network/configure"
+	else
+		qinitlog "Finished executing /etc/network/configure"
+	fi
+else
+	qinitlog "No network configuration found. Enabling DHCP on all interfaces."
+fi
+
+# Get a list of interfaces with static IP addresses (both IPv4 and IPv6)
+static_interfaces=$(ip -o addr show | awk '/inet/ && !/dynamic/ && !/temporary/{print $2}' | sort -u)
+
+# Filter out interfaces with static IP addresses
+for interface in $static_interfaces; do
+	interfaces=$(echo "$interfaces" | grep -v "^$interface$")
+done
+
+interface_up() {
+	local interface=$1
 	qinitlog_start "Set link up: $interface"
 	if status=$(ip link set "$interface" up); then
 		qinitlog_end " [ OK ]"
 	else
 		qinitlog_end " [ FAILED ] ${status}"
 	fi
-	[[ $interface == 'lo' ]] && continue
-	qinitlog "DHCP client (dhclient): [$interface]"
-	dhclient "$interface" -lf /var/lib/dhcp/dhclient.leases -nw || :
+}
+
+# Bring up each interface
+interface_up "lo"
+for interface in $interfaces; do
+	interface_up "$interface"
 done
+
+# Run dhclient once for remaining interfaces
+if [ -n "$interfaces" ]; then
+	qinitlog "Starting DHCP client for interfaces: [$interfaces]"
+	dhclient $interfaces -lf /var/lib/dhcp/dhclient.leases -nw || :
+fi
 
 qinitlog "Starting network services"
 /zquick/libexec/run_hooks.sh ifup.d

@@ -754,6 +754,8 @@ make_inject() {
 
 	inject_secret "/etc/hosts" "hosts file" 644 && injected=1
 
+	inject_secret "/etc/network/configure" "network configuration" 644 && injected=1
+
 	echo "Done injecting secrets and configuration"
 	echo
 	if ((injected == 1)); then
