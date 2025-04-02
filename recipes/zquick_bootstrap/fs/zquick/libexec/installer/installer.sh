@@ -260,7 +260,7 @@ install_esp() {
                 export INSTALLER_MODE=1
                 debugopt=
                 [ "${DEBUG,,}" = "true" ] && debugopt="-d"
-                "$INJECT_SCRIPT" inject --add-loader "$source" ${debugopt} "$source" "${ARGS[@]}"
+                "$INJECT_SCRIPT" inject --no-container --secrets / --add-loader "$source" ${debugopt} "$source" "${ARGS[@]}"
             )
             gum style ""
         fi
