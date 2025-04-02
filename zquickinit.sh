@@ -684,10 +684,20 @@ getefi() {
 	fi
 }
 
-inject() {
+make_inject() {
+	check bsdtar "libarchive-tools"
+	check objcopy binutils
+	check truncate coreutils
+	check stat coreutils
+	check find findutils
+
+	[[ -z $RUNNING_IN_CONTAINER ]] && echo "make_inject must be run from inside container" && exit 1
+
+	local source="$1"
+	local target="$2"
+	local tmp=$(tmpdir)
 
 	inject_secret() {
-
 		local filename='' file='' dir=''
 		filename="${1##*/}"
 		if [[ -n "${INSTALLER_MODE:-}" ]]; then
@@ -719,41 +729,10 @@ inject() {
 		return 0
 	}
 
-	echo "1 = ${1:-}, 2 = ${2:-}"
-
-	local source='' target=''
-	if [[ -n "${ADD_LOADER}" && "${ADD_LOADER}" != 'download' ]]; then
-		source=${1:-}
-	else
-		source=${2:-}
-	fi
-	# shellcheck disable=SC2155
-	local tmp=$(tmpdir)
-
-	echo "Injecting secrets into ZFSQuickInit EFI image"
+	echo "Injecting secrets into ZFSQuickInit EFI image inside container"
 	if [[ ! -r "$source" ]]; then
-		echo "No source_efi specified  - searching for image..."
-		check curl curl
-		check find findutils
-		getefi
-	fi
-
-	if [[ -n "${ADD_LOADER}" ]]; then
-		# using the --add-loader is only supported when being invoked from zbootstrap
-		# It is assumed that the EFI partition is mounted at /efi
-		target="/efi/EFI/${source##*/}"
-	else
-		target=${1:-${source##*/}}
-	fi
-
-	echo "source = ${source}, target = ${target}"
-
-	[[ -e "${target}" ]] && echo "${target} already exists." && exit 1
-
-	version=
-	if [[ ${target} = *-* ]]; then
-		version=${target#*-}
-		version=${version%.*}
+		echo "Source EFI file not found: $source"
+		exit 1
 	fi
 
 	local injected=0
@@ -778,17 +757,7 @@ inject() {
 	echo "Done injecting secrets and configuration"
 	echo
 	if ((injected == 1)); then
-
-		check bsdtar "libarchive-tools"
-		check objcopy binutils
-		check truncate coreutils
-		check stat coreutils
-		check find findutils
-
-		echo "Secrets were injected, appending '_injected' to name"
-		base_name="${target%.*}"
-		extension="${target##*.}"
-		target="${base_name}_injected.${extension}"
+		echo "Secrets were injected"
 
 		echo "Copying original EFI ${source} to output location ${target}..."
 		cp "${source}" "${target}"
@@ -816,6 +785,7 @@ inject() {
 				pax -x sv4cpio -wd "-s#${tmp}##" | zstd >>"${initrd}"
 		else
 			echo "You must have pax or bsdtar installed"
+			exit 1
 		fi
 
 		echo "Replacing initramfs with new initramfs ${initrd} in ${target}..."
@@ -835,6 +805,182 @@ inject() {
 		cp "${source}" "${target}"
 		echo "Created ${target}"
 	fi
+
+	# Output the injection status for the containerized path
+	echo "INJECTED_STATUS=$injected"
+
+	# Return the status (0 for success, non-zero for failure)
+	return 0
+}
+
+inject() {
+	check docker
+
+	echo "1 = ${1:-}, 2 = ${2:-}"
+
+	local source='' target='' target_base='' target_extension=''
+	if [[ -n "${ADD_LOADER}" && "${ADD_LOADER}" != 'download' ]]; then
+		source=${1:-}
+	else
+		source=${2:-}
+	fi
+
+	echo "Injecting secrets into ZFSQuickInit EFI image using container"
+
+	# Define tmp for getefi
+    local tmp=$(tmpdir)
+
+	if [[ ! -r "$source" ]]; then
+		echo "No source_efi specified - searching for image..."
+		check curl curl
+		check find findutils
+		getefi
+	fi
+
+	if [[ -n "${ADD_LOADER}" ]]; then
+		# Using --add-loader is only supported when being invoked from zbootstrap
+		# It is assumed that the EFI partition is mounted at /efi
+		target="/efi/EFI/${source##*/}"
+	else
+		target=${1:-${source##*/}}
+	fi
+
+	echo "source = ${source}, target = ${target}"
+
+	[[ -e "${target}" ]] && echo "${target} already exists." && exit 1
+
+	version=
+	if [[ ${target} = *-* ]]; then
+		version=${target#*-}
+		version=${version%.*}
+	fi
+
+	# Store the base name and extension for later renaming
+	target_base="${target%.*}"
+	target_extension="${target##*.}"
+
+	# Determine the directory containing the source file
+	local source_dir="${source%/*}"
+	local source_filename="${source##*/}"
+
+	local injected=0
+
+	if ((NOCONTAINER == 1)); then
+		# Run injection directly on the host
+		echo "Running injection directly on host (NOCONTAINER=1)"
+
+		# Determine the secrets directory
+		local secrets_path="$SRC_ROOT/$SECRETS"
+		if [[ "$SECRETS" == /* ]]; then
+			secrets_path="$SECRETS"
+		fi
+		if [[ ! -d "$secrets_path" ]]; then
+			echo "Secrets directory not found: $secrets_path"
+			exit 1
+		fi
+
+		# Mimic the container environment
+		INPUT="$SRC_ROOT"
+		OUTPUT="$SRC_ROOT/output"
+		RUNNING_IN_CONTAINER=1
+
+		# Call the injection logic directly (use a temporary target, we'll rename later)
+		local tmp_target="$tmp/inject_target.efi"
+		local output_log="$tmp/inject_output.log"
+
+		# Stream the output in real-time and save to a file for parsing
+		if ! make_inject "$source" "$tmp_target" 2>&1 | tee "$output_log"; then
+			echo "Injection failed. Output is above."
+			exit 1
+		fi
+
+		# Check if secrets were injected (based on the output)
+		if grep -q "INJECTED_STATUS=1" "$output_log" 2>/dev/null; then
+			injected=1
+		fi
+
+		# Rename the target if secrets were injected
+		if ((injected == 1)); then
+			echo "Secrets were injected, appending '_injected' to name"
+			target="${target_base}_injected.${target_extension}"
+		fi
+
+		# Move the temporary target to the final location
+		if [[ -f "$tmp_target" ]]; then
+			mv "$tmp_target" "$target"
+		else
+			echo "Injection failed: temporary target file not found"
+			cat "$output_log"
+			exit 1
+		fi
+	else
+		# Run injection inside the container
+		check docker
+
+		echo "Injecting secrets using container"
+
+		# Prepare to run injection in the container
+		local container_source="/source_input/$source_filename"
+		local container_target="/output/target.efi"
+		local container_secrets="/input/$SECRETS"
+
+		# Ensure the output directory exists
+		mkdir -p "$SRC_ROOT/output"
+
+		# Run the injection inside the container and capture output
+		echo "Launching $ENGINE for secret injection..."
+		cmd=("$ENGINE" run --rm --user "$(id -u):$(id -g)")
+		((NOASK == 0)) && cmd+=(-it)
+
+		# Mount the directory containing the source file as /source_input
+		cmd+=(-v "$source_dir:/source_input:ro")
+		echo "bind-mount: $source_dir to /source_input (read-only)"
+
+		# Mount the entire SRC_ROOT as /input
+		cmd+=(-v "$SRC_ROOT:/input:rw")
+		echo "bind-mount: $SRC_ROOT to /input (read-write)"
+
+		# Mount the output directory
+		cmd+=(-v "$SRC_ROOT/output:/output:rw")
+		echo "bind-mount: $SRC_ROOT/output to /output (read-write)"
+
+		# Mount the script itself if needed
+		[[ -f "$SRC_ROOT/zquickinit.sh" ]] && cmd+=(-v "$SRC_ROOT/zquickinit.sh:/zquickinit.sh:ro") && echo "bind-mount: zquickinit.sh (read-only)"
+
+		cmd+=("$RECIPE_BUILDER")
+		cmd+=(make_inject)
+		[[ -n "$SECRETS" ]] && cmd+=(--secrets "$container_secrets")
+		cmd+=("$container_source" "$container_target")
+
+		# Stream the output in real-time and save to a file for parsing
+		local output_log="$tmp/container_output.log"
+		if ! "${cmd[@]}" 2>&1 | tee "$output_log"; then
+			echo "Container execution failed. Container output is above."
+			exit 1
+		fi
+
+		# Check if secrets were injected (parse the INJECTED_STATUS from the saved output)
+		if grep -q "INJECTED_STATUS=1" "$output_log" 2>/dev/null; then
+			injected=1
+		fi
+
+		# Rename the target if secrets were injected
+		if ((injected == 1)); then
+			echo "Secrets were injected, appending '_injected' to name"
+			target="${target_base}_injected.${target_extension}"
+		fi
+
+		# Move the output file to the target location
+		local container_output_file="$SRC_ROOT/output/target.efi"
+		if [[ -f "$container_output_file" ]]; then
+			mv "$container_output_file" "$target"
+		else
+			echo "Injection failed: target file not found in container output"
+			cat "$tmp/container_output.log"
+			exit 1
+		fi
+	fi
+
 	if [[ -n "${ADD_LOADER}" ]]; then
 		echo "Adding zquickinit ($version) to ESP menu"
 		btarget=${target##*/}
