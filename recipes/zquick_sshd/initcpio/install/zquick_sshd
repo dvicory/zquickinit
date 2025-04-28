@@ -23,10 +23,12 @@ wrap_user() {
 build() {
 	zquick_add_fs
 
+	add_binary ssh
 	add_binary sshd
+	add_binary ssh-keygen
 	add_file /usr/libexec/sshd-session
 
-	zquick_add_secret /root/.ssh/authorized_keys "sshd authorized_keys for root" 644
+	zquick_add_secret /root/.ssh/authorized_keys "sshd authorized_keys for root" 600
 
 	zquick_add_secret /etc/ssh/ssh_host_rsa_key "sshd host rsa key" 600
 	zquick_add_secret /etc/ssh/ssh_host_ecdsa_key "sshd host ecdsa key" 600
@@ -38,6 +40,7 @@ build() {
 
 	zquick_add_secret /etc/ssh/sshd_config "sshd configuration" 644
 
+	mkdir -p "${BUILDROOT}/etc/ssh"
 	if [[ ! -e "${BUILDROOT}/etc/ssh/ssh_host_rsa_key" && ! -e "${BUILDROOT}/etc/ssh/ssh_host_ecdsa_key" && ! -e "${BUILDROOT}/etc/ssh/ssh_host_ed25519_key" ]]; then
 		msg2 "NOTICE: No host keys specified, autogenerating new keys for this build. Keys will be not be saved to zquickinit configuration area."
 		wrap_user ssh-keygen -A -f "${BUILDROOT}"

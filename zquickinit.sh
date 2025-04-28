@@ -752,7 +752,7 @@ make_inject() {
 	inject_secret "/etc/tailscale/tailscaled.conf" "tailscale config" 644 && injected=1
 	inject_secret "/var/lib/tailscale/tailscaled.state" "tailscale node identity" 600 && injected=1
 
-	inject_secret "/root/.ssh/authorized_keys" "sshd authorized_keys for root" 644 && injected=1
+	inject_secret "/root/.ssh/authorized_keys" "sshd authorized_keys for root" 600 && injected=1
 
 	inject_secret "/etc/ssh/ssh_host_rsa_key" "sshd host rsa key" 600 && injected=1
 	inject_secret "/etc/ssh/ssh_host_ecdsa_key" "sshd host ecdsa key" 600 && injected=1
@@ -761,6 +761,8 @@ make_inject() {
 	inject_secret "/etc/ssh/ssh_host_rsa_key.pub" "sshd host rsa pub key" 644 && injected=1
 	inject_secret "/etc/ssh/ssh_host_ecdsa_key.pub" "sshd host ecdsa pub key" 644 && injected=1
 	inject_secret "/etc/ssh/ssh_host_ed25519_key.pub" "sshd host ed25519 pub key" 644 && injected=1
+
+	inject_secret "/etc/ssh/sshd_config" "sshd configuration" 644 && injected=1
 
 	inject_secret "/etc/hosts" "hosts file" 644 && injected=1
 
