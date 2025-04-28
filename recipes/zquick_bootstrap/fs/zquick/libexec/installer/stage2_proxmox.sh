@@ -20,11 +20,25 @@ configure() {
 		# add a newline, to be safe
 		echo "">>"${interfaces_conf}"
 		function insert_config() {
-			echo -e "auto lo\niface lo inet loopback\n"
+			echo -e "auto lo\niface lo inet loopback"
 			for i in /sys/class/net/*; do
 				ID_NET_NAME=$(udevadm test-builtin net_id "$i" 2>/dev/null | grep '^ID_NET_NAME_PATH' | awk -F '=' '{print $2}')
-				[[ -n ${ID_NET_NAME} ]] && echo -e "auto ${ID_NET_NAME}\niface ${ID_NET_NAME} inet dhcp\n" 
+				[[ -z "$ID_NET_NAME" ]] && continue # if ID_NET_NAME is missing, it's not a physical interface
+
+				IFACE=$(basename "$i")
+				IP_INFO=$(ip addr show "$IFACE" | awk '/inet / {print $2}')
+				GATEWAY=$(ip route show dev "$IFACE" | awk '/default/ {print $3}')
+
+				if [[ -n "$IP_INFO" ]]; then
+					# Static IP configuration using CIDR notation
+					echo -e "\nauto $IFACE\niface $IFACE inet static\n\taddress $IP_INFO"
+					[[ -n "$GATEWAY" ]] && echo -e "\tgateway $GATEWAY"
+				else
+					# DHCP configuration
+					echo -e "\nauto $IFACE\niface $IFACE inet dhcp"
+				fi
 			done
+			echo -e "\n"
 		}
 		function update_interfaces() {
 			# Flips to 1 when first non-preserved line is found
