@@ -90,6 +90,10 @@ install() {
 	cat <<-EOF > /etc/apt/sources.list
 		deb http://deb.debian.org/debian ${RELEASE} ${APT_REPOS}
 		deb-src http://deb.debian.org/debian ${RELEASE} ${APT_REPOS}
+
+		# security updates
+		deb http://deb.debian.org/debian-security ${RELEASE}-security ${APT_REPOS}
+		deb-src http://deb.debian.org/debian-security ${RELEASE}-security ${APT_REPOS}
 		EOF
 
 	# Prevent terminal stupidity and interactive prompts
@@ -105,7 +109,7 @@ install() {
 	chmod +x /usr/sbin/policy-rc.d
 
 	# Post debootstrap update apt repos
-	echo "deb [arch=amd64] http://download.proxmox.com/debian/pve bookworm pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
+	echo "deb http://download.proxmox.com/debian/pve ${RELEASE} pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
 	wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg 
 	# this directory is not created by ifupdown2 and install fails without it
 	mkdir -p /run/network
