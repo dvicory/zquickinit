@@ -78,7 +78,7 @@ start() {
     mkdir -p /var/log
     tailscale funnel --bg --https=443 "http://localhost:80/" >>/var/log/ttyd.log
     # only keep the funnel URL up for 30 minutes
-    timeout -k 1s 30m ttyd -i 127.0.0.1 -p 80 -b "/$randompath" tmux new-session -A -s ZFSBootMenu >>/var/log/ttyd.log 2>&1
+    timeout -k 1s 30m ttyd -i 127.0.0.1 -p 80 -b "/$randompath" -W tmux new-session -A -s ZFSBootMenu >>/var/log/ttyd.log 2>&1
 
     curl -s \
         --form-string "token=$PUSHOVER_APP_TOKEN" \
