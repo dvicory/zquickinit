@@ -394,6 +394,16 @@ make_zquick_initramfs() {
 		)"
 		sed -i -r "/^enabled_recipes/{h;s/.*\$/${entry}/};\${x;/^$/{s//${entry}/;H};x}" "${zquickinit_config}/etc/zquickinit.conf"
 
+		# Add RECIPE_BUILDER, ZQUICKINIT_REPO, and ZQUICKEFI_URL
+		entry="RECIPE_BUILDER=${RECIPE_BUILDER}"
+		sed -i -r "/^RECIPE_BUILDER/{h;s|.*$|${entry}|};\${x;/^$/{s||${entry}|;H};x}" "${zquickinit_config}/etc/zquickinit.conf"
+
+		entry="ZQUICKINIT_REPO=${ZQUICKINIT_REPO}"
+		sed -i -r "/^ZQUICKINIT_REPO/{h;s|.*$|${entry}|};\${x;/^$/{s||${entry}|;H};x}" "${zquickinit_config}/etc/zquickinit.conf"
+
+		entry="ZQUICKEFI_URL=${ZQUICKEFI_URL}"
+		sed -i -r "/^ZQUICKEFI_URL/{h;s|.*$|${entry}|};\${x;/^$/{s||${entry}|;H};x}" "${zquickinit_config}/etc/zquickinit.conf"
+
 		# run zquick_core setup explicitly, since its hidden from recipe list
 		env zquickinit_config="${zquickinit_config}" "${INPUT}/recipes/zquick_core/setup.sh"
 
