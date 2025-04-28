@@ -26,6 +26,7 @@ build() {
 	add_binary ssh
 	add_binary sshd
 	add_binary ssh-keygen
+	add_binary /usr/libexec/sshd-auth
 	add_file /usr/libexec/sshd-session
 
 	zquick_add_secret /root/.ssh/authorized_keys "sshd authorized_keys for root" 600
