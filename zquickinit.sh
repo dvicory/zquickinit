@@ -673,7 +673,7 @@ initramfs() {
 	((ENTER == 0 && NOASK == 1)) && cmd+=(--no-ask)
 	((DEBUG == 1)) && cmd+=(--debug)
 	((RELEASE == 1)) && cmd+=(--release)
-	[[ -n "$SECRETS" ]] && cmd+=(--secrets "$SECRETS")
+	[[ $ENTER == 0 && -n "$SECRETS" ]] && cmd+=(--secrets "$SECRETS")
 	[[ -n "$MKINIT_VERBOSE" ]] && cmd+=("$MKINIT_VERBOSE")
 	echo
 	"${cmd[@]}"
