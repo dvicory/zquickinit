@@ -23,10 +23,12 @@ wrap_user() {
 build() {
 	zquick_add_fs
 
+	add_binary ssh
 	add_binary sshd
+	add_binary ssh-keygen
 	add_file /usr/libexec/sshd-session
 
-	zquick_add_secret /root/.ssh/authorized_keys "sshd authorized_keys for root" 644
+	zquick_add_secret /root/.ssh/authorized_keys "sshd authorized_keys for root" 600
 
 	zquick_add_secret /etc/ssh/ssh_host_rsa_key "sshd host rsa key" 600
 	zquick_add_secret /etc/ssh/ssh_host_ecdsa_key "sshd host ecdsa key" 600
