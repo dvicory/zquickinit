@@ -257,6 +257,9 @@ install_esp() {
 
             # end QEMU envs
             (
+                export RECIPE_BUILDER=$(sed -rn '/^RECIPE_BUILDER=/s/.*=(.*)/\1/p' "/etc/zquickinit.conf")
+                export ZQUICKINIT_REPO=$(sed -rn '/^ZQUICKINIT_REPO=/s/.*=(.*)/\1/p' "/etc/zquickinit.conf")
+                export ZQUICKEFI_URL=$(sed -rn '/^ZQUICKEFI_URL=/s/.*=(.*)/\1/p' "/etc/zquickinit.conf")
                 export INSTALLER_MODE=1
                 debugopt=
                 [ "${DEBUG,,}" = "true" ] && debugopt="-d"
