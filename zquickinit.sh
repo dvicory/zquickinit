@@ -242,7 +242,7 @@ builder() {
 	cmd=("$ENGINE" build .
 		-t "$RECIPE_BUILDER"
 		--label org.opencontainers.image.source="${ZQUICKINIT_REPO}"
-		--build-arg KERNELS=linux6.6
+		--build-arg KERNELS=linux6.12
 		--build-arg "PACKAGES=${packages[*]}"
 		--build-arg ZBM_COMMIT_HASH="${ZBM_COMMIT_HASH}"
 		--build-arg ZQUICKINIT_COMMIT_HASH="${ZQUICKINIT_COMMIT_HASH}"

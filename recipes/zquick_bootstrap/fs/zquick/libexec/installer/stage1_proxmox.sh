@@ -128,7 +128,7 @@ debootstrap() {
 
 }
 
-SUITE="${RELEASE:-bookworm}"
+SUITE="${RELEASE:-trixie}"
 MIRROR="http://ftp.us.debian.org/debian/"
 
 DBARGS=("--include=ca-certificates,wget")

@@ -85,7 +85,7 @@ configure() {
 }
 
 install() {
-	: "${RELEASE:=bookworm}"
+	: "${RELEASE:=trixie}"
 	: "${APT_REPOS:=main contrib}"
 
 	cat <<-EOF > /etc/apt/sources.list
@@ -110,16 +110,23 @@ install() {
 	chmod +x /usr/sbin/policy-rc.d
 
 	# Post debootstrap update apt repos
-	echo "deb http://download.proxmox.com/debian/pve ${RELEASE} pve-no-subscription" > /etc/apt/sources.list.d/pve-no-subscription.list
-	wget https://enterprise.proxmox.com/debian/proxmox-release-bookworm.gpg -O /etc/apt/trusted.gpg.d/proxmox-release-bookworm.gpg 
+	cat <<-EOF > /etc/apt/sources.list.d/pve-install-repo.sources
+		Types: deb
+		URIs: http://download.proxmox.com/debian/pve
+		Suites: ${RELEASE}
+		Components: pve-no-subscription
+		Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+		Architectures: amd64
+		EOF
+	wget https://enterprise.proxmox.com/debian/proxmox-archive-keyring-trixie.gpg -O /usr/share/keyrings/proxmox-archive-keyring.gpg 
 	# this directory is not created by ifupdown2 and install fails without it
 	mkdir -p /run/network
 	# Do the upgrade
 	apt-get update --yes && apt-get full-upgrade --yes
-	apt-get remove -- yes os-prober linux-image-amd64 'linux-image-6.1*'
+	apt-get remove -- yes os-prober linux-image-amd64 'linux-image-6.12*'
 	# Install the kernel, and ensure zfs is part of initramfs
-	apt-get install --yes pve-kernel-6.2 proxmox-ve postfix open-iscsi chrony zfs-initramfs console-setup
-	# optional: pve-headers-6.2 
+	apt-get install --yes proxmox-kernel-6.14 proxmox-ve postfix open-iscsi chrony zfs-initramfs console-setup
+	# optional: proxmox-headers-6.14
 
 	# The next 3 lines not needed, since proxmox ships custom kernel that includes zfs. But if you were doing
 	# plain-debian, this would be required. 

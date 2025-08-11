@@ -1107,7 +1107,7 @@ echo "$@"
 gum style --bold --border double --align center \
     --width 50 --margin "1 2" --padding "0 2" "zquickinit zbootstrap"
 
-choices=("Install Proxmox 8.x"
+choices=("Install Proxmox 9.x"
     "Partition (repartition) boot drive (with zfs pool backup/restore)"
     "Install/Update Zquickinit (Update EFI System Partition)"
     "Backup/Restore datasets to/from pools"
